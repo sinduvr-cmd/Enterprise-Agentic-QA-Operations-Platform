@@ -998,7 +998,7 @@ function App() {
                   </div>
 
                   {/* Acceptance Criteria */}
-                  {req.acceptance_criteria && req.acceptance_criteria.length > 0 && (
+                  {Array.isArray(req.acceptance_criteria) && req.acceptance_criteria.length > 0 && (
                     <div className="mt-4 pt-3 border-t border-slate-100">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                         Acceptance Criteria
@@ -1524,7 +1524,7 @@ function App() {
                 <p className="text-slate-600 mt-0.5">{selectedTestCase.objective}</p>
               </div>
 
-              {selectedTestCase.preconditions?.length > 0 && (
+              {Array.isArray(selectedTestCase.preconditions) && selectedTestCase.preconditions.length > 0 && (
                 <div>
                   <span className="font-bold text-slate-700 block uppercase text-[10px]">Preconditions</span>
                   <ul className="list-disc list-inside text-slate-600 space-y-1 mt-1">
@@ -1535,7 +1535,7 @@ function App() {
                 </div>
               )}
 
-              {selectedTestCase.steps?.length > 0 && (
+              {Array.isArray(selectedTestCase.steps) && selectedTestCase.steps.length > 0 && (
                 <div>
                   <span className="font-bold text-slate-700 block uppercase text-[10px] mb-1.5">Test Steps & Expected Outcomes</span>
                   <div className="space-y-2">
@@ -1935,7 +1935,11 @@ function App() {
                   scriptCodeTab === "page_objects" ? "border-emerald-600 text-emerald-800" : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                Page Objects ({selectedScriptDetail.page_objects?.length || 0})
+                Page Objects ({
+                  Array.isArray(selectedScriptDetail.page_objects)
+                    ? selectedScriptDetail.page_objects.length
+                    : Object.keys(selectedScriptDetail.page_objects || {}).length
+                })
               </button>
               <button
                 onClick={() => setScriptCodeTab("fixtures")}
@@ -1964,21 +1968,44 @@ function App() {
 
               {scriptCodeTab === "page_objects" && (
                 <div className="space-y-4">
-                  {(selectedScriptDetail.page_objects || []).map((po, idx) => (
-                    <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
-                      <div className="font-bold text-slate-900 font-mono text-xs">{po.class_name}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">File: {po.file_path}</div>
-                      <pre className="bg-slate-900 text-slate-200 p-3 rounded-lg font-mono text-[11px] mt-2 overflow-x-auto">
-                        {po.code}
-                      </pre>
-                    </div>
-                  ))}
+                  {(() => {
+                    const rawPo = selectedScriptDetail.page_objects;
+                    const poList = Array.isArray(rawPo)
+                      ? rawPo
+                      : rawPo && typeof rawPo === "object"
+                      ? Object.entries(rawPo).map(([name, code]) => ({
+                          class_name: name,
+                          file_path: name.endsWith(".py") ? name : `pages/${name.toLowerCase()}.py`,
+                          code: typeof code === "string" ? code : JSON.stringify(code, null, 2)
+                        }))
+                      : [];
+
+                    if (poList.length === 0) {
+                      return (
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-center">
+                          No separate Page Objects required for this script.
+                        </div>
+                      );
+                    }
+
+                    return poList.map((po, idx) => (
+                      <div key={idx} className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                        <div className="font-bold text-slate-900 font-mono text-xs">{po.class_name || po.file_path}</div>
+                        {po.file_path && <div className="text-[11px] text-slate-500 mt-0.5">File: {po.file_path}</div>}
+                        <pre className="bg-slate-900 text-slate-200 p-3 rounded-lg font-mono text-[11px] mt-2 overflow-x-auto">
+                          {po.code}
+                        </pre>
+                      </div>
+                    ));
+                  })()}
                 </div>
               )}
 
               {scriptCodeTab === "fixtures" && (
                 <pre className="bg-slate-950 text-slate-200 p-4 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto">
-                  {selectedScriptDetail.fixtures_code || "# Playwright browser context & page fixtures configured in conftest.py\nimport pytest\n\n@pytest.fixture\ndef payment_context(page):\n    page.goto('https://staging.example.com')\n    yield page"}
+                  {typeof selectedScriptDetail.fixtures === "object" && selectedScriptDetail.fixtures && Object.keys(selectedScriptDetail.fixtures).length > 0
+                    ? Object.entries(selectedScriptDetail.fixtures).map(([k, v]) => `# === ${k} ===\n${v}`).join("\n\n")
+                    : selectedScriptDetail.fixtures_code || "# Playwright browser context & page fixtures configured in conftest.py\nimport pytest\n\n@pytest.fixture\ndef payment_context(page):\n    page.goto('https://staging.example.com')\n    yield page"}
                 </pre>
               )}
 
@@ -2108,7 +2135,7 @@ function App() {
                               <code className="text-emerald-800 font-mono text-[11px] block">{tr.failure_analysis.suggested_fix}</code>
                             </div>
 
-                            {tr.failure_analysis.evidence?.length > 0 && (
+                            {Array.isArray(tr.failure_analysis.evidence) && tr.failure_analysis.evidence.length > 0 && (
                               <div className="mt-2 pt-2 border-t border-slate-100">
                                 <span className="font-semibold text-slate-500 block text-[10px] uppercase">Evidence &amp; Telemetry:</span>
                                 <ul className="list-disc list-inside text-slate-600 text-[11px] space-y-0.5 mt-0.5">
