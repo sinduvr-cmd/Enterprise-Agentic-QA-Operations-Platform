@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentic_qa_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: agentic_qa_ops
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak IAM Service
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: agentic_qa_keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: adminpassword
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/agentic_qa_ops
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgrespassword
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Backend API Service (FastAPI)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: agentic_qa_backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      DEMO_MODE: "true"
+      DATABASE_URL: postgresql+psycopg2://postgres:postgrespassword@postgres:5432/agentic_qa_ops
+      SECRET_KEY: enterprise-agentic-qa-secret-production-key-2026
+      LLM_PROVIDER: mock
+      GITHUB_INTEGRATION_MODE: mock
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend Service (Nginx / Vite)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: agentic_qa_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic QA — Operations Platform</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              sidebar: '#08231c',
+              sidebarLight: '#0d2e26',
+              sidebarHover: '#123d32',
+              sidebarActive: '#15473a',
+              sidebarBorder: '#1c5446',
+              mint: '#34d399',
+              emeraldBtn: '#0b382d',
+              emeraldBtnHover: '#0f4639',
+              bgLight: '#f6f8f6',
+              borderLight: '#e4eae4',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Cache control to ensure fresh code on every browser reload -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="/static/vendor/react.min.js"></script>
+  <script src="/static/vendor/react-dom.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f6f8f6;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .badge-running {
+      background-color: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+    .badge-paused {
+      background-color: #fefce8;
+      color: #ca8a04;
+      border: 1px solid #fef08a;
+    }
+    .badge-passed {
+      background-color: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+    .badge-failed {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+  </style>
+  <script>
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      var root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = '<div style="background:#08231c;color:#fff;min-height:100vh;padding:40px;font-family:sans-serif;">' +
+          '<div style="max-width:800px;margin:0 auto;background:#144336;padding:30px;border-radius:12px;border:1px solid #1d5b4b;">' +
+          '<h2 style="color:#ef4444;margin-top:0;">Runtime Error: ' + msg + '</h2>' +
+          '<div style="color:#cbd5e1;font-size:13px;margin-bottom:12px;">' + (url || '') + ':' + lineNo + ':' + columnNo + '</div>' +
+          '<pre style="background:#08231c;padding:16px;border-radius:8px;color:#fca5a5;overflow-x:auto;white-space:pre-wrap;">' + (error ? (error.stack || error.message) : msg) + '</pre>' +
+          '</div></div>';
+      }
+      return false;
+    };
+  </script>
+  <script src="/static/vendor/react.min.js"></script>
+  <script src="/static/vendor/react-dom.min.js"></script>
+  <script src="/static/vendor/babel.min.js"></script>
+</head>
+<body class="bg-[#f6f8f6] text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+  <div id="root">
+    <div class="flex items-center justify-center min-h-screen bg-[#08231c] text-white">
+      <div class="text-center space-y-3">
+        <div class="w-10 h-10 border-4 border-[#34d399] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div class="text-sm font-semibold tracking-wider text-[#6ee7b7] uppercase">Loading Agentic QA Operations Platform...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Always bust cache so edits are immediately visible without manual hard-refresh
+      var cacheBuster = '?v=' + Date.now();
+      fetch('/static/app.js' + cacheBuster, { cache: 'no-store' })
+        .then(function(res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status + ' loading /static/app.js');
+          return res.text();
+        })
+        .then(function(code) {
+          try {
+            var transformed = Babel.transform(code, {
+              presets: ['react', 'env'],
+              filename: 'app.js'
+            }).code;
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.text = transformed;
+            document.body.appendChild(script);
+          } catch (transformErr) {
+            console.error('Babel Transform Error:', transformErr);
+            showError('JSX Compilation Error', transformErr);
+          }
+        })
+        .catch(function(err) {
+          console.error('Fetch Error:', err);
+          showError('Network / Load Error', err);
+        });
+
+      function showError(title, err) {
+        var root = document.getElementById('root');
+        if (!root) return;
+        root.innerHTML = '<div style="background:#08231c;color:#fff;min-height:100vh;padding:40px;font-family:sans-serif;">' +
+          '<div style="max-width:800px;margin:0 auto;background:#144336;padding:30px;border-radius:12px;border:1px solid #1d5b4b;">' +
+          '<h2 style="color:#ef4444;margin-top:0;">' + title + '</h2>' +
+          '<pre style="background:#08231c;padding:16px;border-radius:8px;color:#fca5a5;overflow-x:auto;white-space:pre-wrap;">' + (err.stack || err.message || err) + '</pre>' +
+          '</div></div>';
+      }
+    })();
+  </script>
+</body>
+</html>
+
+
